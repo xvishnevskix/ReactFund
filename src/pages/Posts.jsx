@@ -100,7 +100,7 @@ export default App;*/
 //
 // export default App;
 
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {usePosts} from "../hooks/usePosts";
 import {useFetching} from "../hooks/useFetching";
 import PostService from "../API/PostService";
@@ -123,18 +123,31 @@ function Posts() {
     const [totalPages, setTotalPages] = useState(0)
     const [limit, setLimit] = useState( 10)
     const [page, setPage] = useState( 1)
+    const lastElement = useRef()
+    const observer = useRef()
 
 
 
 
     const [fetchPosts, isPostsLoading, postError] = useFetching( async (limit, page) => {
         const response = await PostService.getAll(limit, page)
-        setPosts(response.data)
+        setPosts([...posts,...response.data])
         const totalCount = response.headers['x-total-count']
         setTotalPages(getPageCount(totalCount, limit))
     })
 
-
+    useEffect( () => {
+        if (isPostsLoading) return;
+        if (observer.current) observer.current.disconnect();
+        var callback = function(entries, observer) {
+            if (entries[0].isIntersecting && page < totalPages) {
+                setPage(page + 1)
+                console.log('fsdfsdfsdf')
+            }
+        };
+        observer.current = new IntersectionObserver(callback);
+        observer.current.observe(lastElement.current)
+    }, [isPostsLoading])
 
     useEffect( () => {
         fetchPosts(limit, page)
@@ -156,7 +169,6 @@ function Posts() {
 
     const changePage = (page) => {
         setPage(page)
-        fetchPosts(limit, page)
     }
 
     return (
@@ -178,10 +190,11 @@ function Posts() {
             {postError &&
             <h1>Произошла ошибка ${postError}</h1>
             }
+            <PostList remove={removePost} posts={sortedAndSearchedPosts} title="Список" />
+            <div ref={lastElement} style={{height: 20, background: "red"}}></div>
+            {isPostsLoading &&
+                <div style={{display: 'flex', justifyContent: 'center', marginTop: '25px'}}><Loader/></div>
 
-            {isPostsLoading
-                ? <div style={{display: 'flex', justifyContent: 'center', marginTop: '25px'}}><Loader/></div>
-                : <PostList remove={removePost} posts={sortedAndSearchedPosts} title="Список" />
             }
             <Pagination totalPages={totalPages} page={page} changePage={changePage}></Pagination>
 

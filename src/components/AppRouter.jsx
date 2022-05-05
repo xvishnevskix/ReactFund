@@ -7,10 +7,15 @@ import {Navigate} from "react-router";
 import PostIdPage from "../pages/PostIdPage";
 import {privateRoutes, publicRoutes, routes} from "../router";
 import {AuthContext} from "../context";
+import Loader from "./UI/Loader/Loader";
 
 const AppRouter = () => {
 
-const {isAuth} = useContext(AuthContext)
+const {isAuth, isLoading} = useContext(AuthContext)
+
+    if (isLoading) {
+        return <Loader/>
+    }
 
     return (
         isAuth
@@ -26,7 +31,10 @@ const {isAuth} = useContext(AuthContext)
 
                 {
                     privateRoutes.map((route) => {
-                        return <Route path={route.path} element={<route.element/>}  key={route.path}/>;
+                        return <Route
+                            path={route.path}
+                            element={<route.element/>}
+                            key={route.path}/>;
                     })
                 }
             </Routes>
@@ -35,7 +43,10 @@ const {isAuth} = useContext(AuthContext)
             <Routes>
                 {
                     publicRoutes.map((route) => {
-                        return <Route path={route.path} element={<route.element/>}  key={route.path}/>;
+                        return <Route
+                            path={route.path}
+                            element={<route.element/>}
+                            key={route.path}/>;
                     })
 
                 }
